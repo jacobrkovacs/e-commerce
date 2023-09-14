@@ -1,6 +1,5 @@
 const router = require('express').Router();
 const { Product, Category, Tag, ProductTag } = require('../../models');
-const { findAll, findByPk } = require('../../models/Product');
 
 // The `/api/products` endpoint
 
@@ -9,7 +8,7 @@ router.get('/', async (req, res) => {
   // find all products
   // be sure to include its associated Category and Tag data
   try{
-    const getAllProduct = await findAll({
+    const getAllProduct = await Product.findAll({
       include: [{model: Category}, {model: Tag}]
     });
     res.status(200).json(getAllProduct)
@@ -23,7 +22,7 @@ router.get('/:id', async (req, res) => {
   // find a single product by its `id`
   // be sure to include its associated Category and Tag data
   try{
-    const productByID = await findByPk(req.params.id, {
+    const productByID = await Product.findByPk(req.params.id, {
       include: [{model: Category}, {model: Tag}]
     })
     if(!productByID) {
@@ -46,12 +45,7 @@ router.post('/', (req, res) => {
       tagIds: [1, 2, 3, 4]
     }
   */
-  Product.create(req.body, {
-    product_name: req.body.product_name,
-    price: req.body.price,
-    stock: req.body.stock,
-    tagIds: req.body.tagIds
-  })
+  Product.create(req.body)
     .then((product) => {
       // if there's product tags, we need to create pairings to bulk create in the ProductTag model
       if (req.body.tagIds.length) {
@@ -127,7 +121,8 @@ router.delete('/:id', async (req, res) => {
     }
   })
   if(!deleteProduct){
-    res.status(404).json({message: 'No category found with that id.'})
+    res.status(404).json({message: 'No category found with that id.'});
+    return;
   }
   res.status(200).json(deleteProduct);
 } catch(err) {
